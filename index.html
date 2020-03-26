@@ -1,0 +1,93 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3c.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml">
+<head>
+<meta charset="utf8"/>
+<meta http-equiv="pragma" content="no-cache"/>
+<script src="//code.jquery.com/jquery-2.2.4.min.js"></script>
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/leaflet/1.2.0/leaflet.css" />
+<script src="//cdnjs.cloudflare.com/ajax/libs/leaflet/1.2.0/leaflet.js"></script>
+
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black"/>
+<meta name="apple-mobile-web-app-title" content="GeoJSON Japan"/>
+
+<title>GeoJSON Japan</title>
+<script>
+</script>
+<script>
+//. 初期中心位置
+var lat = 35.681377778;
+var lng = 139.76736389;
+
+//. 初期ズームレベル
+var zoomlevel = 10;
+
+var map = null;
+
+$(function(){
+  //. 初期位置を中心とした地図を OpenStreetMap データで表示
+  map = L.map('demoMap', { dragging: true, zoomControl: true }).setView( [ lat, lng ], zoomlevel );
+
+  //. ここから下の JavaScript を全てコメントにしても #1 のエラーが発生する
+  L.tileLayer(
+    'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: 'Map data &copy; <a href="//openstreetmap.org/">OpenStreetMap</a>',
+    }
+  ).addTo( map );
+
+  //. 47 都道府県の GeoJSON データを取得
+  $.ajax({
+    url: './japan.geojson',
+    type: 'GET',
+    success: function( result ){
+      if( result && result.features ){
+        var jsons = result.features;
+        jsons.forEach( function( geojson ){
+          var feature = [{
+            type: 'Feature',
+            geometry: geojson.geometry
+          }];
+          var option = {  //. なるべく透明に近いスタイルで
+            color: '#fff',
+            fillColor: '#fff',
+            weight: 1,
+            opacity: 0.01,
+            fillOpacity: 0.01
+          }
+          L.geoJson( feature, {
+            style: option,
+            onEachFeature: function( feature, layer ){
+              layer.bindPopup( geojson.properties.id + ' : ' + geojson.properties.nam_ja );
+            }
+          } ).addTo( map );
+        });
+      }else{
+      }
+    },
+    error: function( e0, e1, e2 ){
+      console.log( e1 + ' : ' + e2 );
+    }
+  });
+});
+</script>
+<style>
+html, body {
+  width: 100%;
+  height: 100%;
+  padding: 0px;
+  margin: 0px;
+}
+#demoMap{
+  position: fixed;
+  width: 100%;
+  height: 100%;
+}
+</style>
+</head>
+<body>
+  <div>
+    <div id="demoMap"></div>
+  </div>
+</body>
+</html>
